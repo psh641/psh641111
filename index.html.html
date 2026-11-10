@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EcoTrack Youth - 청소년 기후행동 탄소발자국 트래커</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts (Noto Sans KR) -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef8f1',
+                            100: '#d7f0df',
+                            200: '#b3e1c0',
+                            300: '#83cc9b',
+                            400: '#52b174',
+                            500: '#2E7D32', // 싱그러운 에코 그린 메인
+                            600: '#256729',
+                            700: '#1e5222',
+                            800: '#1b421e',
+                            900: '#17371a',
+                        },
+                        mint: {
+                            50: '#f0fdfa',
+                            100: '#ccfbf1',
+                            200: '#99f6e4',
+                            300: '#5eead4',
+                            400: '#2dd4bf',
+                            500: '#14b8a6',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Noto Sans KR', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f4f7f5;
+            color: #1f2937;
+        }
+        .nav-btn.active {
+            color: #2E7D32;
+            border-bottom: 3px solid #2E7D32;
+            font-weight: 700;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #a7f3d0;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="flex flex-col min-h-screen pb-16 md:pb-0">
+
+    <!-- 상단 네비게이션 바 -->
+    <header class="bg-white border-b border-emerald-100 sticky top-0 z-40 shadow-sm">
+        <div class="max-w-md md:max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-2.5">
+                <div class="w-10 h-10 rounded-2xl bg-brand-500 text-white flex items-center justify-center text-xl shadow-md shadow-brand-100">
+                    <i class="fa-solid fa-leaf"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg font-bold text-brand-700 leading-tight">EcoTrack Youth</h1>
+                    <p class="text-[10px] text-slate-500 font-medium">청소년 탄소 중립 실천 챌린지</p>
+                </div>
+            </div>
+
+            <!-- 데스크톱 전용 메뉴 -->
+            <nav class="hidden md:flex space-x-6 text-sm font-medium text-slate-600">
+                <button onclick="switchTab('tracker')" id="dtab-tracker" class="nav-btn active py-5">
+                    <i class="fa-solid fa-pen-to-square mr-1"></i> 행동 기록
+                </button>
+                <button onclick="switchTab('ranking')" id="dtab-ranking" class="nav-btn py-5">
+                    <i class="fa-solid fa-trophy mr-1"></i> 동아리/학급 랭킹
+                </button>
+                <button onclick="switchTab('report')" id="dtab-report" class="nav-btn py-5">
+                    <i class="fa-solid fa-chart-pie mr-1"></i> 나만의 리포트
+                </button>
+                <button onclick="switchTab('ethics')" id="dtab-ethics" class="nav-btn py-5">
+                    <i class="fa-solid fa-shield-cat mr-1"></i> 데이터 & 윤리
+                </button>
+            </nav>
+
+            <!-- 프로필 / 학급 표시 -->
+            <div class="flex items-center gap-2 bg-brand-50 px-3 py-1.5 rounded-full border border-brand-100">
+                <i class="fa-solid fa-seedling text-brand-500 text-xs"></i>
+                <span id="user-club-tag" class="text-xs font-bold text-brand-700">녹색동아리 2기</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="flex-grow max-w-md md:max-w-4xl w-full mx-auto px-4 py-6">
+
+        <!-- 탭 1: 일상 탄소 절감 행동 기록 및 실시간 계산 -->
+        <section id="tab-tracker" class="tab-content space-y-6">
+
+            <!-- 실시간 요약 카드 -->
+            <div class="bg-gradient-to-br from-brand-500 via-brand-600 to-teal-700 text-white rounded-3xl p-6 shadow-xl relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 opacity-15 text-white text-9xl pointer-events-none">
+                    <i class="fa-solid fa-earth-asia"></i>
+                </div>
+                <div class="relative z-10">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <span class="text-xs font-semibold bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-brand-50">
+                                오늘 총 감축량
+                            </span>
+                            <div class="text-3xl md:text-4xl font-extrabold mt-2 font-mono tracking-tight">
+                                <span id="today-carbon">0.00</span> <span class="text-lg font-sans font-normal">kg CO₂eq</span>
+                            </div>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-xs text-brand-100">누적 절감 소나무</span>
+                            <div class="text-xl font-bold text-mint-200 mt-0.5">
+                                <i class="fa-solid fa-tree mr-1"></i><span id="total-trees">0</span> 그루
+                            </div>
+                        </div>
+                    </div>
+                    <p class="text-xs text-brand-100/90 leading-relaxed">
+                        환경부 탄소중립 실천 계수에 따른 정확한 절감량이 산출됩니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- 행동 입력 카드 목록 -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-emerald-100/80 space-y-4">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <h2 class="font-bold text-slate-800 text-base flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-brand-500"></i> 오늘 실천한 탄소 중립 행동 선택
+                    </h2>
+                    <span class="text-xs text-slate-400">다중 선택 가능</span>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <!-- 행동 1: 텀블러 사용 -->
+                    <label class="action-card flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-brand-300 bg-slate-50/50 cursor-pointer transition-all">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" data-co2="0.052" class="action-checkbox w-5 h-5 accent-brand-500 rounded" onchange="calculateDailyImpact()">
+                            <div>
+                                <div class="font-bold text-slate-700">텀블러/다회용 컵 사용</div>
+                                <div class="text-xs text-slate-400">일회용 컵 대신 사용 (+0.052 kg)</div>
+                            </div>
+                        </div>
+                        <span class="w-8 h-8 rounded-full bg-emerald-100 text-brand-700 flex items-center justify-center text-sm"><i class="fa-solid fa-mug-hot"></i></span>
+                    </label>
+
+                    <!-- 행동 2: 대중교통/도보 등교 -->
+                    <label class="action-card flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-brand-300 bg-slate-50/50 cursor-pointer transition-all">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" data-co2="0.450" class="action-checkbox w-5 h-5 accent-brand-500 rounded" onchange="calculateDailyImpact()">
+                            <div>
+                                <div class="font-bold text-slate-700">대중교통 / 도보 / 자전거 등교</div>
+                                <div class="text-xs text-slate-400">승용차 대신 이동 (+0.450 kg)</div>
+                            </div>
+                        </div>
+                        <span class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm"><i class="fa-solid fa-bus"></i></span>
+                    </label>
+
+                    <!-- 행동 3: 급식 잔반 0 -->
+                    <label class="action-card flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-brand-300 bg-slate-50/50 cursor-pointer transition-all">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" data-co2="0.320" class="action-checkbox w-5 h-5 accent-brand-500 rounded" onchange="calculateDailyImpact()">
+                            <div>
+                                <div class="font-bold text-slate-700">급식 잔반 남기지 않기</div>
+                                <div class="text-xs text-slate-400">음식물 쓰레기 절감 (+0.320 kg)</div>
+                            </div>
+                        </div>
+                        <span class="w-8 h-8 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-sm"><i class="fa-solid fa-utensils"></i></span>
+                    </label>
+
+                    <!-- 행동 4: 전자영수증/분리배출 -->
+                    <label class="action-card flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-brand-300 bg-slate-50/50 cursor-pointer transition-all">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" data-co2="0.080" class="action-checkbox w-5 h-5 accent-brand-500 rounded" onchange="calculateDailyImpact()">
+                            <div>
+                                <div class="font-bold text-slate-700">올바른 분리배출 및 재활용</div>
+                                <div class="text-xs text-slate-400">페트병 라벨 제거 등 (+0.080 kg)</div>
+                            </div>
+                        </div>
+                        <span class="w-8 h-8 rounded-full bg-teal-100 text-teal-700 flex items-center justify-center text-sm"><i class="fa-solid fa-recycle"></i></span>
+                    </label>
+
+                    <!-- 행동 5: 빈 교실 전등 스위치 OFF -->
+                    <label class="action-card flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-brand-300 bg-slate-50/50 cursor-pointer transition-all">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" data-co2="0.120" class="action-checkbox w-5 h-5 accent-brand-500 rounded" onchange="calculateDailyImpact()">
+                            <div>
+                                <div class="font-bold text-slate-700">빈 교실 전등 소등 및 플러그 뽑기</div>
+                                <div class="text-xs text-slate-400">대기전력 차단 (+0.120 kg)</div>
+                            </div>
+                        </div>
+                        <span class="w-8 h-8 rounded-full bg-yellow-100 text-yellow-700 flex items-center justify-center text-sm"><i class="fa-solid fa-plug"></i></span>
+                    </label>
+
+                    <!-- 행동 6: 손수건 사용 -->
+                    <label class="action-card flex items-center justify-between p-4 rounded-xl border border-slate-200 hover:border-brand-300 bg-slate-50/50 cursor-pointer transition-all">
+                        <div class="flex items-center gap-3">
+                            <input type="checkbox" data-co2="0.035" class="action-checkbox w-5 h-5 accent-brand-500 rounded" onchange="calculateDailyImpact()">
+                            <div>
+                                <div class="font-bold text-slate-700">종이타월 대신 손수건 사용</div>
+                                <div class="text-xs text-slate-400">핸드드라이어/종이 차단 (+0.035 kg)</div>
+                            </div>
+                        </div>
+                        <span class="w-8 h-8 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm"><i class="fa-solid fa-hand-sparkles"></i></span>
+                    </label>
+                </div>
+
+                <button onclick="saveDailyRecord()" class="w-full mt-3 py-3.5 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-xl shadow-md transition-all flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-check"></i> 오늘 기록 저장하고 랭킹 반영하기
+                </button>
+            </div>
+
+            <!-- 최근 실천 기록 타임라인 -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-emerald-100/80">
+                <h3 class="font-bold text-slate-800 text-sm mb-3">최근 실천 로그</h3>
+                <div id="log-list" class="space-y-2 text-xs">
+                    <div class="text-center py-4 text-slate-400">아직 저장된 실천 기록이 없습니다. 위 체크박스를 선택 후 저장해보세요!</div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- 탭 2: 동아리 / 학급별 챌린지 랭킹 보드 -->
+        <section id="tab-ranking" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-emerald-100/80">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-slate-100">
+                    <div>
+                        <h2 class="font-bold text-slate-800 text-base">동아리 / 학급 협력 랭킹 보드</h2>
+                        <p class="text-xs text-slate-500 mt-0.5">서로 경쟁하고 격려하며 우리 모임의 탄소 감축 목표를 달성하세요.</p>
+                    </div>
+
+                    <!-- 코드 참가 및 변경 -->
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <input type="text" id="group-code-input" placeholder="학급 코드 (예: GREEN2026)" class="text-xs p-2.5 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 w-full sm:w-44">
+                        <button onclick="joinGroup()" class="bg-brand-500 text-white text-xs font-bold px-3 py-2.5 rounded-xl hover:bg-brand-600 shrink-0">
+                            참여
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 챌린지 달성률 그래프 -->
+                <div class="my-5 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-100">
+                    <div class="flex justify-between items-center text-xs font-bold text-brand-800 mb-2">
+                        <span><i class="fa-solid fa-flag-checkered text-brand-600 mr-1"></i> [녹색동아리 2기] 이달의 공통 목표: 100 kg CO₂eq</span>
+                        <span id="group-progress-text" class="text-brand-600">42.5% 달성</span>
+                    </div>
+                    <div class="w-full bg-white h-3.5 rounded-full overflow-hidden p-0.5 border border-emerald-200">
+                        <div id="group-progress-bar" class="bg-gradient-to-r from-brand-400 to-mint-500 h-full rounded-full transition-all duration-500" style="width: 42.5%;"></div>
+                    </div>
+                </div>
+
+                <!-- Leaderboard List -->
+                <div class="space-y-2.5 text-xs">
+                    <!-- 1st -->
+                    <div class="flex items-center justify-between p-3.5 rounded-xl bg-amber-50/60 border border-amber-200/70">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 h-6 rounded-full bg-amber-400 text-white font-bold flex items-center justify-center text-xs">1</span>
+                            <div>
+                                <span class="font-bold text-slate-800">김민준 (환경부장)</span>
+                                <span class="ml-2 text-[10px] text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded">열정 행동가</span>
+                            </div>
+                        </div>
+                        <div class="font-mono font-bold text-slate-700 text-sm">
+                            12.450 <span class="text-xs text-slate-500 font-sans">kg</span>
+                        </div>
+                    </div>
+
+                    <!-- 2nd -->
+                    <div class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 border border-slate-200">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 h-6 rounded-full bg-slate-300 text-slate-700 font-bold flex items-center justify-center text-xs">2</span>
+                            <div>
+                                <span class="font-bold text-slate-800">이서연</span>
+                                <span class="ml-2 text-[10px] text-brand-700 bg-brand-100 px-1.5 py-0.5 rounded">텀블러 마스터</span>
+                            </div>
+                        </div>
+                        <div class="font-mono font-bold text-slate-700 text-sm">
+                            9.820 <span class="text-xs text-slate-500 font-sans">kg</span>
+                        </div>
+                    </div>
+
+                    <!-- 3rd -->
+                    <div class="flex items-center justify-between p-3.5 rounded-xl bg-amber-700/5 border border-amber-800/10">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 h-6 rounded-full bg-amber-700/30 text-amber-900 font-bold flex items-center justify-center text-xs">3</span>
+                            <div>
+                                <span class="font-bold text-slate-800">박도현</span>
+                            </div>
+                        </div>
+                        <div class="font-mono font-bold text-slate-700 text-sm">
+                            8.110 <span class="text-xs text-slate-500 font-sans">kg</span>
+                        </div>
+                    </div>
+
+                    <!-- My Current Rank -->
+                    <div id="my-rank-item" class="flex items-center justify-between p-3.5 rounded-xl bg-brand-50 border border-brand-200">
+                        <div class="flex items-center gap-3">
+                            <span class="w-6 h-6 rounded-full bg-brand-500 text-white font-bold flex items-center justify-center text-xs">4</span>
+                            <div>
+                                <span class="font-bold text-brand-900">나 (EcoUser)</span>
+                                <span class="ml-2 text-[10px] text-brand-800 bg-brand-200 px-1.5 py-0.5 rounded">내 순위</span>
+                            </div>
+                        </div>
+                        <div class="font-mono font-bold text-brand-700 text-sm">
+                            <span id="my-rank-carbon">0.000</span> <span class="text-xs text-slate-500 font-sans">kg</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 탭 3: 나만의 기후 행동 리포트 및 배지 -->
+        <section id="tab-report" class="tab-content hidden space-y-6">
+            <!-- 요약 카드 -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-emerald-100/80 space-y-5">
+                <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+                    <div>
+                        <h2 class="font-bold text-slate-800 text-base">월간 실천 리포트 요약</h2>
+                        <p class="text-xs text-slate-500">지속 가능한 기후 행동 습관을 되돌아봅니다.</p>
+                    </div>
+                    <span class="text-xs px-2.5 py-1 bg-brand-100 text-brand-800 font-bold rounded-full">2026년 11월</span>
+                </div>
+
+                <!-- 배지 컬렉션 -->
+                <div>
+                    <h3 class="font-bold text-slate-700 text-xs uppercase tracking-wider mb-3">획득한 기후 행동 배지</h3>
+                    <div class="grid grid-cols-3 gap-3">
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center flex flex-col items-center">
+                            <div class="w-10 h-10 rounded-full bg-emerald-100 text-brand-600 flex items-center justify-center text-lg mb-1 shadow-sm">
+                                <i class="fa-solid fa-mug-hot"></i>
+                            </div>
+                            <span class="text-xs font-bold text-slate-700">텀블러 수호자</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">5회 이상 완료</span>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center flex flex-col items-center opacity-50" id="badge-bus">
+                            <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-lg mb-1">
+                                <i class="fa-solid fa-bus"></i>
+                            </div>
+                            <span class="text-xs font-bold text-slate-700">그린 라이더</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">대중교통 10회</span>
+                        </div>
+
+                        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 text-center flex flex-col items-center opacity-50" id="badge-food">
+                            <div class="w-10 h-10 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center text-lg mb-1">
+                                <i class="fa-solid fa-leaf"></i>
+                            </div>
+                            <span class="text-xs font-bold text-slate-700">잔반 제로 히어로</span>
+                            <span class="text-[10px] text-slate-400 mt-0.5">잔반 0회 달성</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 통계 그래픽/리포트 정보 -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-600">이번 달 가장 많이 실천한 행동:</span>
+                        <span class="font-bold text-brand-700">텀블러/다회용 컵 사용</span>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-600">절감한 온실가스의 비유:</span>
+                        <span class="font-bold text-slate-800">스마트폰 <strong id="report-phones" class="text-brand-600">0</strong>회 완충 분량</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 탭 4: 데이터 출처 및 윤리 가이드라인 -->
+        <section id="tab-ethics" class="tab-content hidden space-y-6">
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-emerald-100/80 space-y-4">
+                <div class="flex items-center gap-2 pb-3 border-b border-slate-100">
+                    <i class="fa-solid fa-shield-halved text-brand-500 text-lg"></i>
+                    <h2 class="font-bold text-slate-800 text-base">윤리적 고려 요소 및 데이터 기준</h2>
+                </div>
+
+                <div class="space-y-4 text-xs text-slate-600 leading-relaxed">
+                    <div class="p-3.5 bg-brand-50/50 rounded-xl border border-brand-100">
+                        <h3 class="font-bold text-brand-800 mb-1">1. 위치 정보 등 민감정보 수집 배제</h3>
+                        <p>EcoTrack Youth는 청소년의 사생활을 보호하기 위해 실시간 GPS 위치 추적이나 사용자의 민감한 개인정보를 서버에 저장하지 않습니다. 모든 기록은 사용자의 웹브라우저 로컬 저장소에 보관됩니다.</p>
+                    </div>
+
+                    <div class="p-3.5 bg-brand-50/50 rounded-xl border border-brand-100">
+                        <h3 class="font-bold text-brand-800 mb-1">2. 환경부 탄소중립 실천 공신력 계수 적용</h3>
+                        <p>앱에 적용된 탄소 절감 수치는 대한민국 환경부 및 한국환경공단의 '탄소중립 실천포인트'와 국립산림과학원의 표준 탄소 흡수량 수치를 근거로 작성되었습니다.</p>
+                        <ul class="list-disc list-inside mt-2 text-slate-500 space-y-1">
+                            <li>텀블러 1회 사용: 약 0.052 kg CO₂eq 감축</li>
+                            <li>대중교통 이용 (10km 기준): 약 0.450 kg CO₂eq 감축</li>
+                            <li>음식물 쓰레기 1식 감축: 약 0.320 kg CO₂eq 감축</li>
+                            <li>소나무 1그루 연간 탄소 흡수량: 약 6.6 kg CO₂eq 기준</li>
+                        </ul>
+                    </div>
+
+                    <div class="p-3.5 bg-brand-50/50 rounded-xl border border-brand-100">
+                        <h3 class="font-bold text-brand-800 mb-1">3. 디지털 탄소 발자국 최소화 디자인</h3>
+                        <p>화려하고 무거운 고화질 그래픽 대신 경량화된 웹 구조 및 SVG 아이콘을 채택하여 앱 사용 시 발생하는 네트워크 전력 소비 및 웹 브라우저의 디지털 탄소 배출을 줄였습니다.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- 하단 모바일 고정 네비게이션 바 -->
+    <div class="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex justify-around py-2 z-40 text-[11px] text-slate-500">
+        <button onclick="switchTab('tracker')" id="mtab-tracker" class="flex flex-col items-center gap-1 font-bold text-brand-500">
+            <i class="fa-solid fa-pen-to-square text-base"></i>
+            <span>기록</span>
+        </button>
+        <button onclick="switchTab('ranking')" id="mtab-ranking" class="flex flex-col items-center gap-1 font-medium">
+            <i class="fa-solid fa-trophy text-base"></i>
+            <span>랭킹</span>
+        </button>
+        <button onclick="switchTab('report')" id="mtab-report" class="flex flex-col items-center gap-1 font-medium">
+            <i class="fa-solid fa-chart-pie text-base"></i>
+            <span>리포트</span>
+        </button>
+        <button onclick="switchTab('ethics')" id="mtab-ethics" class="flex flex-col items-center gap-1 font-medium">
+            <i class="fa-solid fa-shield-cat text-base"></i>
+            <span>윤리</span>
+        </button>
+    </div>
+
+    <!-- 토스트 알림 메시지 -->
+    <div id="toast" class="fixed bottom-20 md:bottom-6 right-1/2 translate-x-1/2 md:translate-x-0 md:right-6 bg-slate-800 text-white text-xs px-4 py-3 rounded-xl shadow-xl transition-all transform translate-y-10 opacity-0 z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-text">저장되었습니다!</span>
+    </div>
+
+    <!-- JavaScript 로직 -->
+    <script>
+        // 기본 상태 데이터
+        let totalCarbonSaved = 0.0;
+        let selectedDailyCarbon = 0.0;
+        let actionLogs = [];
+
+        window.onload = function() {
+            // 로컬 스토리지에서 기록 불러오기
+            loadStoredData();
+        };
+
+        // 탭 전환 함수
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            const target = document.getElementById(`tab-${tabId}`);
+            if (target) target.classList.remove('hidden');
+
+            // 데스크톱 탭 스타일
+            document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
+            const dTab = document.getElementById(`dtab-${tabId}`);
+            if (dTab) dTab.classList.add('active');
+
+            // 모바일 탭 스타일
+            document.querySelectorAll('[id^="mtab-"]').forEach(btn => {
+                btn.classList.remove('font-bold', 'text-brand-500');
+                btn.classList.add('font-medium', 'text-slate-500');
+            });
+            const mTab = document.getElementById(`mtab-${tabId}`);
+            if (mTab) {
+                mTab.classList.remove('font-medium', 'text-slate-500');
+                mTab.classList.add('font-bold', 'text-brand-500');
+            }
+        }
+
+        // 체크박스 선택 시 실시간 감축량 계산
+        function calculateDailyImpact() {
+            const checkboxes = document.querySelectorAll('.action-checkbox');
+            let currentSelectionTotal = 0;
+            checkboxes.forEach(cb => {
+                if (cb.checked) {
+                    currentSelectionTotal += parseFloat(cb.getAttribute('data-co2'));
+                }
+            });
+            selectedDailyCarbon = currentSelectionTotal;
+            document.getElementById('today-carbon').innerText = (selectedDailyCarbon).toFixed(3);
+        }
+
+        // 오늘 기록 저장
+        function saveDailyRecord() {
+            if (selectedDailyCarbon === 0) {
+                showToast("1개 이상의 실천 항목을 선택해주세요!");
+                return;
+            }
+
+            totalCarbonSaved += selectedDailyCarbon;
+            
+            // 데이터 업데이트
+            const now = new Date();
+            const timeStr = `${now.getMonth() + 1}/${now.getDate()} ${now.getHours()}:${String(now.getMinutes()).padStart(2, '0')}`;
+            
+            actionLogs.unshift({
+                date: timeStr,
+                amount: selectedDailyCarbon.toFixed(3)
+            });
+
+            // UI 업데이트
+            updateMetricsUI();
+            renderLogs();
+            resetCheckboxes();
+
+            // 저장 알림
+            showToast("오늘의 실천이 성공적으로 기록되었습니다!");
+            saveToLocalStorage();
+        }
+
+        // 지표 및 UI 업데이트
+        function updateMetricsUI() {
+            // 소나무 그루 수 계산 (소나무 1그루 연간 약 6.6kg 감축)
+            const trees = (totalCarbonSaved / 6.6).toFixed(2);
+            document.getElementById('total-trees').innerText = trees;
+            document.getElementById('my-rank-carbon').innerText = totalCarbonSaved.toFixed(3);
+
+            // 리포트 폰 충전 횟수 비유 (스마트폰 1회 완충 시 약 0.008kg CO2)
+            const phones = Math.floor(totalCarbonSaved / 0.008);
+            document.getElementById('report-phones').innerText = phones;
+
+            // 배지 활성화 조건
+            if (totalCarbonSaved > 0.5) {
+                document.getElementById('badge-bus')?.classList.remove('opacity-50');
+            }
+            if (totalCarbonSaved > 1.0) {
+                document.getElementById('badge-food')?.classList.remove('opacity-50');
+            }
+        }
+
+        // 로그 리스트 렌더링
+        function renderLogs() {
+            const container = document.getElementById('log-list');
+            if (actionLogs.length === 0) return;
+
+            container.innerHTML = actionLogs.slice(0, 5).map(log => `
+                <div class="flex justify-between items-center p-2.5 bg-slate-50 rounded-lg border border-slate-100">
+                    <span class="text-slate-500 font-mono">${log.date}</span>
+                    <span class="font-bold text-brand-700">+${log.amount} kg CO₂eq 절감</span>
+                </div>
+            `).join('');
+        }
+
+        // 체크박스 초기화
+        function resetCheckboxes() {
+            document.querySelectorAll('.action-checkbox').forEach(cb => cb.checked = false);
+            selectedDailyCarbon = 0;
+            document.getElementById('today-carbon').innerText = "0.00";
+        }
+
+        // 동아리 / 학급 코드 변경
+        function joinGroup() {
+            const input = document.getElementById('group-code-input').value.trim();
+            if (!input) {
+                showToast("참여할 코드명을 입력해주세요.");
+                return;
+            }
+            document.getElementById('user-club-tag').innerText = input;
+            showToast(`[${input}] 학급/동아리에 성공적으로 참여했습니다!`);
+        }
+
+        // 토스트 메세지 출력
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-text').innerText = message;
+            toast.classList.remove('translate-y-10', 'opacity-0');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-10', 'opacity-0');
+            }, 2500);
+        }
+
+        // 로컬스토리지 저장 및 불러오기
+        function saveToLocalStorage() {
+            localStorage.setItem('ecotrack_total', totalCarbonSaved);
+            localStorage.setItem('ecotrack_logs', JSON.stringify(actionLogs));
+        }
+
+        function loadStoredData() {
+            const savedTotal = localStorage.getItem('ecotrack_total');
+            const savedLogs = localStorage.getItem('ecotrack_logs');
+
+            if (savedTotal) totalCarbonSaved = parseFloat(savedTotal);
+            if (savedLogs) actionLogs = JSON.parse(savedLogs);
+
+            updateMetricsUI();
+            renderLogs();
+        }
+    </script>
+</body>
+</html>
